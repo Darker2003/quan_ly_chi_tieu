@@ -1,0 +1,251 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Báo Cáo - MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2><i class="bi bi-graph-up"></i> Báo Cáo & Phân Tích</h2>
+        <p class="text-muted">Phân tích chi tiết về tình hình tài chính</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-label">Tổng Thu Nhập</div>
+            <div class="stat-value income">
+                {{ summary.total_income|default:0|floatformat:0 }} đ
+            </div>
+            <small class="text-muted">Tháng này</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-label">Tổng Chi Tiêu</div>
+            <div class="stat-value expense">
+                {{ summary.total_expense|default:0|floatformat:0 }} đ
+            </div>
+            <small class="text-muted">Tháng này</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-label">Số Dư</div>
+            <div class="stat-value {% if summary.balance >= 0 %}income{% else %}expense{% endif %}">
+                {{ summary.balance|default:0|floatformat:0 }} đ
+            </div>
+            <small class="text-muted">Tháng này</small>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-pie-chart"></i> Chi Tiêu Theo Danh Mục
+            </div>
+            <div class="card-body">
+                {% if breakdown %}
+                <canvas id="categoryChart" height="300"></canvas>
+                {% else %}
+                <p class="text-center text-muted py-5">Chưa có dữ liệu</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list-check"></i> Chi Tiết Theo Danh Mục
+            </div>
+            <div class="card-body">
+                {% if breakdown %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Danh mục</th>
+                                <th class="text-end">Số tiền</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in breakdown %}
+                            <tr>
+                                <td>{{ item.category_name }}</td>
+                                <td class="text-end">{{ item.total|floatformat:0 }} đ</td>
+                                <td class="text-end">{{ item.percentage|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-5">Chưa có dữ liệu</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-bar-chart"></i> So Sánh 6 Tháng Gần Đây
+            </div>
+            <div class="card-body">
+                {% if monthly %}
+                <canvas id="monthlyChart" height="100"></canvas>
+                {% else %}
+                <p class="text-center text-muted py-5">Chưa có dữ liệu</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-table"></i> Bảng So Sánh Tháng
+            </div>
+            <div class="card-body">
+                {% if monthly %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tháng</th>
+                                <th class="text-end">Thu nhập</th>
+                                <th class="text-end">Chi tiêu</th>
+                                <th class="text-end">Chênh lệch</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in monthly %}
+                            <tr>
+                                <td>{{ item.month }}</td>
+                                <td class="text-end income">{{ item.income|floatformat:0 }} đ</td>
+                                <td class="text-end expense">{{ item.expense|floatformat:0 }} đ</td>
+                                <td class="text-end {% if item.income|add:"-"|add:item.expense >= 0 %}income{% else %}expense{% endif %}">
+                                    {% widthratio item.income 1 1 %}{% widthratio item.expense -1 1 %} đ
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-5">Chưa có dữ liệu</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Category Breakdown Pie Chart
+{% if breakdown %}
+const categoryData = {{ breakdown|safe }};
+const ctx1 = document.getElementById('categoryChart').getContext('2d');
+new Chart(ctx1, {
+    type: 'pie',
+    data: {
+        labels: categoryData.map(item => item.category_name),
+        datasets: [{
+            data: categoryData.map(item => item.total),
+            backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += new Intl.NumberFormat('vi-VN').format(context.parsed);
+                        label += ' đ (' + categoryData[context.dataIndex].percentage.toFixed(1) + '%)';
+                        return label;
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Monthly Comparison Bar Chart
+{% if monthly %}
+const monthlyData = {{ monthly|safe }};
+const ctx2 = document.getElementById('monthlyChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: monthlyData.map(item => item.month),
+        datasets: [
+            {
+                label: 'Thu nhập',
+                data: monthlyData.map(item => item.income),
+                backgroundColor: '#4CAF50'
+            },
+            {
+                label: 'Chi tiêu',
+                data: monthlyData.map(item => item.expense),
+                backgroundColor: '#f44336'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += new Intl.NumberFormat('vi-VN').format(context.parsed.y);
+                        label += ' đ';
+                        return label;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
+

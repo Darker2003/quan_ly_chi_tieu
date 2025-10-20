@@ -1,0 +1,103 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Thêm Giao Dịch - MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2><i class="bi bi-plus-circle"></i> Thêm Giao Dịch Mới</h2>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label">Loại giao dịch *</label>
+                            <select class="form-select" id="type" name="type" required onchange="filterCategories()">
+                                <option value="">Chọn loại</option>
+                                <option value="income">Thu nhập</option>
+                                <option value="expense">Chi tiêu</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Số tiền *</label>
+                            <input type="number" class="form-control" id="amount" name="amount" required min="0" step="1000">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Ngày *</label>
+                            <input type="date" class="form-control" id="date" name="date" required value="{{ today }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category_id" class="form-label">Danh mục *</label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">Chọn danh mục</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" data-type="{{ category.type }}">
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả *</label>
+                        <input type="text" class="form-control" id="description" name="description" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'transactions' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Lưu Giao Dịch
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set today's date as default
+document.getElementById('date').valueAsDate = new Date();
+
+// Filter categories based on transaction type
+function filterCategories() {
+    const type = document.getElementById('type').value;
+    const categorySelect = document.getElementById('category_id');
+    const options = categorySelect.getElementsByTagName('option');
+    
+    for (let i = 1; i < options.length; i++) {
+        const option = options[i];
+        const categoryType = option.getAttribute('data-type');
+        
+        if (type === '' || categoryType === type) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    }
+    
+    // Reset category selection
+    categorySelect.value = '';
+}
+</script>
+{% endblock %}
+
