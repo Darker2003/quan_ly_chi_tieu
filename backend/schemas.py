@@ -2,10 +2,11 @@
 Pydantic schemas for request/response validation
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator
-from typing import Optional, List
 from datetime import date, datetime
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class TransactionType(str, Enum):
@@ -62,6 +63,7 @@ class UserResponse(UserBase):
     id: int
     created_at: datetime
     is_active: bool
+    is_admin: bool = False
 
     class Config:
         from_attributes = True
@@ -168,6 +170,7 @@ class FinancialSummary(BaseModel):
     balance: float
     period_start: date
     period_end: date
+    transaction_count: Optional[int] = 0
 
 
 class CategoryBreakdown(BaseModel):
@@ -213,3 +216,25 @@ class MessageResponse(BaseModel):
 
     message: str
     success: bool = True
+
+
+# Admin Schemas
+class UserAdminResponse(UserResponse):
+    """Admin user response with additional details"""
+
+    updated_at: Optional[datetime] = None
+    transaction_count: Optional[int] = 0
+    total_income: Optional[float] = 0.0
+    total_expense: Optional[float] = 0.0
+
+    class Config:
+        from_attributes = True
+
+
+class UserAdminUpdate(BaseModel):
+    """Admin user update schema"""
+
+    full_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None

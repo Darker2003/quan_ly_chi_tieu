@@ -12,14 +12,8 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Category, Transaction, User
-from ..schemas import (
-    AnalyticsResponse,
-    CategoryBreakdown,
-    FinancialSummary,
-    MonthlyComparison,
-    TransactionType,
-    TrendData,
-)
+from ..schemas import (AnalyticsResponse, CategoryBreakdown, FinancialSummary,
+                       MonthlyComparison, TransactionType, TrendData)
 from ..security import get_current_user
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -262,36 +256,101 @@ async def get_trend_data(
 
 @router.get("/dashboard", response_model=AnalyticsResponse)
 async def get_dashboard_data(
-    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    start_date: Optional[date] = Query(None, description="Start date for dashboard data (default: all time)"),
+    end_date: Optional[date] = Query(None, description="End date for dashboard data (default: all time)"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """
     Get complete dashboard data - combines all analytics
+    Supports optional date range filtering
+    If no dates provided, shows ALL TIME data
     """
-    # Get current month dates
-    today = date.today()
-    start_date = date(today.year, today.month, 1)
-    if today.month == 12:
-        end_date = date(today.year, 12, 31)
+    # Determine date range
+    if start_date and end_date:
+        # Use provided date range
+        filter_start = start_date
+        filter_end = end_date
     else:
-        # Get first day of next month, then subtract one day
-        from datetime import timedelta
+        # Get ALL transactions (no date filter)
+        filter_start = None
+        filter_end = None
 
-        next_month = date(today.year, today.month + 1, 1)
-        end_date = next_month - timedelta(days=1)
+    # Build base query filters
+    base_filters = [
+        Transaction.user_id == current_user.id,
+        Transaction.is_deleted == False,
+    ]
 
-    # Get summary
-    summary = await get_financial_summary(start_date, end_date, current_user, db)
+    # Add date filters if provided
+    if filter_start:
+        base_filters.append(Transaction.date >= filter_start)
+    if filter_end:
+        base_filters.append(Transaction.date <= filter_end)
 
-    # Get category breakdown
+    # Calculate total income
+    total_income = (
+        db.query(func.sum(Transaction.amount))
+        .filter(
+            *base_filters,
+            Transaction.type == "income",
+        )
+        .scalar()
+        or 0.0
+    )
+
+    # Calculate total expense
+    total_expense = (
+        db.query(func.sum(Transaction.amount))
+        .filter(
+            *base_filters,
+            Transaction.type == "expense",
+        )
+        .scalar()
+        or 0.0
+    )
+
+    # Get transaction count
+    transaction_count = (
+        db.query(func.count(Transaction.id))
+        .filter(*base_filters)
+        .scalar()
+        or 0
+    )
+
+    # Get actual date range from user's transactions (for display)
+    date_range = (
+        db.query(
+            func.min(Transaction.date),
+            func.max(Transaction.date)
+        )
+        .filter(*base_filters)
+        .first()
+    )
+
+    display_start = date_range[0] if date_range[0] else date.today()
+    display_end = date_range[1] if date_range[1] else date.today()
+
+    # Create summary
+    summary = FinancialSummary(
+        total_income=total_income,
+        total_expense=total_expense,
+        balance=total_income - total_expense,
+        period_start=display_start,
+        period_end=display_end,
+        transaction_count=transaction_count,
+    )
+
+    # Get category breakdown (use actual date range for display)
     category_breakdown = await get_category_breakdown(
-        start_date, end_date, None, current_user, db
+        display_start, display_end, None, current_user, db
     )
 
     # Get monthly comparison (last 6 months)
     monthly_comparison = await get_monthly_comparison(6, current_user, db)
 
-    # Get trend data
-    trend_data = await get_trend_data(start_date, end_date, None, current_user, db)
+    # Get trend data (use actual date range for display)
+    trend_data = await get_trend_data(display_start, display_end, None, current_user, db)
 
     return AnalyticsResponse(
         summary=summary,

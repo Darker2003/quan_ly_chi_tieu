@@ -10,6 +10,59 @@
     </div>
 </div>
 
+<!-- Date Range Filter -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" action="{% url 'dashboard' %}" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Từ ngày</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">Đến ngày</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel"></i> Lọc
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-clockwise"></i> Tất cả
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" onclick="setThisMonth()">
+                            Tháng này
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="setLastMonth()">
+                            Tháng trước
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="setThisYear()">
+                            Năm nay
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Period Display -->
+{% if dashboard_data.summary.period_start and dashboard_data.summary.period_end %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <i class="bi bi-calendar-range"></i>
+            Hiển thị dữ liệu từ <strong>{{ dashboard_data.summary.period_start }}</strong>
+            đến <strong>{{ dashboard_data.summary.period_end }}</strong>
+            {% if dashboard_data.summary.transaction_count %}
+            - Tổng <strong>{{ dashboard_data.summary.transaction_count }}</strong> giao dịch
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-md-4">
         <div class="stat-card">
@@ -183,6 +236,44 @@ if (monthlyData.length > 0) {
             }
         }
     });
+}
+
+// Quick date range functions
+function setThisMonth() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    document.getElementById('start_date').value = formatDate(firstDay);
+    document.getElementById('end_date').value = formatDate(lastDay);
+    document.querySelector('form').submit();
+}
+
+function setLastMonth() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    document.getElementById('start_date').value = formatDate(firstDay);
+    document.getElementById('end_date').value = formatDate(lastDay);
+    document.querySelector('form').submit();
+}
+
+function setThisYear() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), 0, 1);
+    const lastDay = new Date(now.getFullYear(), 11, 31);
+
+    document.getElementById('start_date').value = formatDate(firstDay);
+    document.getElementById('end_date').value = formatDate(lastDay);
+    document.querySelector('form').submit();
+}
+
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 </script>
 {% endblock %}

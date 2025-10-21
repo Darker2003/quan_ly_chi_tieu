@@ -2,6 +2,7 @@
 URL configuration for web app
 """
 from django.urls import path
+
 from . import views
 
 urlpatterns = [
@@ -13,5 +14,8 @@ urlpatterns = [
     path('transactions/', views.transactions, name='transactions'),
     path('transactions/add/', views.add_transaction, name='add_transaction'),
     path('analytics/', views.analytics, name='analytics'),
+    path('admin/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin/users/<int:user_id>/', views.admin_user_detail, name='admin_user_detail'),
+    path('admin/users/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
 ]
 

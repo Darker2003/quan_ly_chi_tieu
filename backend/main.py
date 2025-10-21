@@ -6,10 +6,11 @@ Main entry point for the API server
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from .config import settings
-from .database import init_db, get_db
-from .routers import auth, categories, transactions, analytics, users
 from sqlalchemy.orm import Session
+
+from .config import settings
+from .database import get_db, init_db
+from .routers import admin, analytics, auth, categories, transactions, users
 
 # Create FastAPI application
 app = FastAPI(
@@ -35,6 +36,7 @@ app.include_router(categories.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 
 @app.on_event("startup")

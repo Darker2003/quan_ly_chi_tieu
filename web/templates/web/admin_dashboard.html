@@ -1,0 +1,220 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Quản Trị Hệ Thống - MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="bi bi-shield-lock"></i> Quản Trị Hệ Thống</h2>
+            <p class="text-muted">Quản lý người dùng và thống kê hệ thống</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-people"></i> Tổng Người Dùng</h6>
+                    <h2 class="mb-0">{{ stats.total_users|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-person-check"></i> Đang Hoạt Động</h6>
+                    <h2 class="mb-0">{{ stats.active_users|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-person-x"></i> Không Hoạt Động</h6>
+                    <h2 class="mb-0">{{ stats.inactive_users|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-shield-check"></i> Quản Trị Viên</h6>
+                    <h2 class="mb-0">{{ stats.admin_users|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Tổng Giao Dịch</h6>
+                    <h3 class="text-primary">{{ stats.total_transactions|default:0|floatformat:0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Tổng Thu Nhập</h6>
+                    <h3 class="text-success">{{ stats.total_income|default:0|floatformat:0 }} đ</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Tổng Chi Tiêu</h6>
+                    <h3 class="text-danger">{{ stats.total_expense|default:0|floatformat:0 }} đ</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-people-fill"></i> Quản Lý Người Dùng</h5>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Tìm kiếm</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Tên hoặc email..." value="{{ filters.search }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="is_active" class="form-label">Trạng thái</label>
+                    <select class="form-select" id="is_active" name="is_active">
+                        <option value="">Tất cả</option>
+                        <option value="true" {% if filters.is_active == 'true' %}selected{% endif %}>Hoạt động</option>
+                        <option value="false" {% if filters.is_active == 'false' %}selected{% endif %}>Không hoạt động</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="is_admin" class="form-label">Vai trò</label>
+                    <select class="form-select" id="is_admin" name="is_admin">
+                        <option value="">Tất cả</option>
+                        <option value="true" {% if filters.is_admin == 'true' %}selected{% endif %}>Quản trị viên</option>
+                        <option value="false" {% if filters.is_admin == 'false' %}selected{% endif %}>Người dùng</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Lọc
+                    </button>
+                </div>
+            </form>
+
+            <!-- Users Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Giao dịch</th>
+                            <th>Thu nhập</th>
+                            <th>Chi tiêu</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_item in users %}
+                        <tr>
+                            <td>{{ user_item.id }}</td>
+                            <td>
+                                <strong>{{ user_item.full_name }}</strong>
+                                {% if user_item.id == user.id %}
+                                <span class="badge bg-info">Bạn</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user_item.email }}</td>
+                            <td>
+                                {% if user_item.is_admin %}
+                                <span class="badge bg-danger"><i class="bi bi-shield-check"></i> Admin</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-person"></i> User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user_item.is_active %}
+                                <span class="badge bg-success">Hoạt động</span>
+                                {% else %}
+                                <span class="badge bg-warning">Không hoạt động</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user_item.transaction_count|default:0 }}</td>
+                            <td class="text-success">{{ user_item.total_income|default:0|floatformat:0 }} đ</td>
+                            <td class="text-danger">{{ user_item.total_expense|default:0|floatformat:0 }} đ</td>
+                            <td>{{ user_item.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'admin_user_detail' user_item.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                                {% if user_item.id != user.id %}
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="confirmDelete({{ user_item.id }}, '{{ user_item.full_name }}')">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">
+                                Không tìm thấy người dùng nào
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Xác Nhận Xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa người dùng <strong id="deleteUserName"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-circle"></i> Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(userId, userName) {
+    document.getElementById('deleteUserName').textContent = userName;
+    document.getElementById('deleteForm').action = `/admin/users/${userId}/delete/`;
+    var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
+
