@@ -1,6 +1,7 @@
 """
 MoneyFlow Web Views
 """
+import json
 import requests
 from django.conf import settings
 from django.contrib import messages
@@ -87,10 +88,13 @@ def logout_view(request):
 
 def dashboard(request):
     """Dashboard page with optional date range filter"""
+    print("DEBUG: Dashboard view called!")
     if not request.session.get('access_token'):
+        print("DEBUG: No access token, redirecting to login")
         return redirect('login')
 
     token = request.session.get('access_token')
+    print(f"DEBUG: Token from session: {token[:20] if token else 'None'}...")
     headers = {'Authorization': f'Bearer {token}'}
 
     # Get date range from request (if provided)
@@ -106,24 +110,51 @@ def dashboard(request):
 
     try:
         # Get dashboard data with optional date range
+        print(f"DEBUG: Calling backend API: {settings.FASTAPI_BASE_URL}/analytics/dashboard")
+        print(f"DEBUG: Headers: {headers}")
+        print(f"DEBUG: Params: {params}")
+        
         response = requests.get(
             f"{settings.FASTAPI_BASE_URL}/analytics/dashboard",
             headers=headers,
             params=params
         )
 
+        print(f"DEBUG: Response status: {response.status_code}")
         if response.status_code == 200:
             dashboard_data = response.json()
+            print(f"DEBUG: Dashboard data received: {list(dashboard_data.keys())}")
+            print(f"DEBUG: Category breakdown: {len(dashboard_data.get('category_breakdown', []))} items")
+            print(f"DEBUG: Monthly comparison: {len(dashboard_data.get('monthly_comparison', []))} items")
         else:
             dashboard_data = {}
+            print(f"DEBUG: Dashboard API failed: {response.status_code} - {response.text}")
             messages.error(request, 'Không thể tải dữ liệu dashboard')
     except Exception as e:
         dashboard_data = {}
+        print(f"DEBUG: Dashboard API error: {str(e)}")
         messages.error(request, f'Lỗi kết nối: {str(e)}')
+    
+    # FIX: Ensure dashboard_data is not empty
+    if not dashboard_data:
+        print("DEBUG: dashboard_data is empty, using mock data")
+        dashboard_data = {
+            'summary': {
+                'total_income': 0,
+                'total_expense': 0,
+                'balance': 0,
+                'transaction_count': 0
+            },
+            'category_breakdown': [],
+            'monthly_comparison': [],
+            'trend_data': [],
+            'recent_transactions': []
+        }
 
     context = {
         'user': request.session.get('user'),
         'dashboard_data': dashboard_data,
+        'dashboard_data_json': json.dumps(dashboard_data),
         'start_date': start_date,
         'end_date': end_date,
     }
@@ -261,10 +292,11 @@ def analytics(request):
         )
         summary = summary_response.json() if summary_response.status_code == 200 else {}
 
-        # Get category breakdown
+        # Get category breakdown (only expenses for pie chart)
         breakdown_response = requests.get(
             f"{settings.FASTAPI_BASE_URL}/analytics/category-breakdown",
-            headers=headers
+            headers=headers,
+            params={'type': 'expense'}
         )
         breakdown = breakdown_response.json() if breakdown_response.status_code == 200 else []
 
@@ -285,7 +317,10 @@ def analytics(request):
         'user': request.session.get('user'),
         'summary': summary,
         'breakdown': breakdown,
-        'monthly': monthly
+        'monthly': monthly,
+        'summary_json': json.dumps(summary),
+        'breakdown_json': json.dumps(breakdown),
+        'monthly_json': json.dumps(monthly)
     }
     return render(request, 'web/analytics.html', context)
 

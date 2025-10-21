@@ -94,25 +94,55 @@ def generate_vietnamese_name(gender):
         return f"{surname} {middle} {given_name}"
     return f"{surname} {given_name}"
 
-def generate_email(name):
-    """Generate email from name"""
-    # Remove Vietnamese characters for email
-    name_parts = name.lower().split()
+def remove_vietnamese_accents(text):
+    """Remove Vietnamese accents and diacritics"""
+    import unicodedata
+    
+    # Normalize to NFD (decomposed form)
+    text = unicodedata.normalize('NFD', text)
+    
+    # Remove combining characters (accents)
+    result = ''.join(char for char in text if unicodedata.category(char) != 'Mn')
+    
+    # Manual replacements for specific Vietnamese characters
     replacements = {
-        'đ': 'd', 'ă': 'a', 'â': 'a', 'ê': 'e', 'ô': 'o', 'ơ': 'o', 'ư': 'u',
+        'đ': 'd', 'Đ': 'D',
+        'ă': 'a', 'â': 'a', 'ê': 'e', 'ô': 'o', 'ơ': 'o', 'ư': 'u',
         'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
         'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
         'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
         'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
         'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-        'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y'
+        'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+        'Á': 'A', 'À': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+        'É': 'E', 'È': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+        'Í': 'I', 'Ì': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+        'Ó': 'O', 'Ò': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+        'Ú': 'U', 'Ù': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+        'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y'
     }
+    
+    for viet, eng in replacements.items():
+        result = result.replace(viet, eng)
+    
+    return result
+
+def generate_email(name):
+    """Generate email from name without Vietnamese accents"""
+    # Remove Vietnamese characters for email
+    name_parts = name.lower().split()
     
     email_name = ""
     for part in name_parts:
-        for viet, eng in replacements.items():
-            part = part.replace(viet, eng)
-        email_name += part
+        # Remove accents first
+        clean_part = remove_vietnamese_accents(part)
+        # Remove any remaining non-ASCII characters
+        clean_part = ''.join(c for c in clean_part if c.isascii() and c.isalnum())
+        email_name += clean_part
+    
+    # Ensure email name is not empty
+    if not email_name:
+        email_name = "user"
     
     domains = ["gmail.com", "yahoo.com", "outlook.com", "moneyflow.vn"]
     number = random.randint(1, 999) if random.random() > 0.5 else ""

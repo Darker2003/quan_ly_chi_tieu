@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load humanize %}
 
 {% block title %}Giao Dịch - MoneyFlow{% endblock %}
 
@@ -88,7 +89,7 @@
                             {% endif %}
                         </td>
                         <td class="text-end {% if transaction.type == 'income' %}income{% else %}expense{% endif %}">
-                            <strong>{{ transaction.amount|floatformat:0 }} đ</strong>
+                            <strong>{{ transaction.amount|floatformat:0|intcomma }} đ</strong>
                         </td>
                         <td>
                             <small class="text-muted">{{ transaction.notes|default:"-" }}</small>

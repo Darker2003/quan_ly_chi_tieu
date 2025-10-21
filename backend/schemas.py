@@ -201,6 +201,20 @@ class TrendData(BaseModel):
     type: TransactionType
 
 
+class RecentTransactionResponse(BaseModel):
+    """Recent transaction for dashboard"""
+    
+    id: int
+    amount: float
+    description: str
+    date: date
+    type: TransactionType
+    category_name: str
+    
+    class Config:
+        from_attributes = True
+
+
 class AnalyticsResponse(BaseModel):
     """Complete analytics response"""
 
@@ -208,6 +222,7 @@ class AnalyticsResponse(BaseModel):
     category_breakdown: List[CategoryBreakdown]
     monthly_comparison: List[MonthlyComparison]
     trend_data: List[TrendData]
+    recent_transactions: List[RecentTransactionResponse] = []
 
 
 # Generic Response

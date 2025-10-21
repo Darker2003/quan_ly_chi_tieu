@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load humanize %}
 
 {% block title %}Quản Trị Hệ Thống - MoneyFlow{% endblock %}
 
@@ -53,7 +54,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Tổng Giao Dịch</h6>
-                    <h3 class="text-primary">{{ stats.total_transactions|default:0|floatformat:0 }}</h3>
+                    <h3 class="text-primary">{{ stats.total_transactions|default:0|intcomma }}</h3>
                 </div>
             </div>
         </div>
@@ -61,7 +62,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Tổng Thu Nhập</h6>
-                    <h3 class="text-success">{{ stats.total_income|default:0|floatformat:0 }} đ</h3>
+                    <h3 class="text-success">{{ stats.total_income|default:0|floatformat:0|intcomma }} đ</h3>
                 </div>
             </div>
         </div>
@@ -69,7 +70,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Tổng Chi Tiêu</h6>
-                    <h3 class="text-danger">{{ stats.total_expense|default:0|floatformat:0 }} đ</h3>
+                    <h3 class="text-danger">{{ stats.total_expense|default:0|floatformat:0|intcomma }} đ</h3>
                 </div>
             </div>
         </div>
@@ -153,9 +154,9 @@
                                 <span class="badge bg-warning">Không hoạt động</span>
                                 {% endif %}
                             </td>
-                            <td>{{ user_item.transaction_count|default:0 }}</td>
-                            <td class="text-success">{{ user_item.total_income|default:0|floatformat:0 }} đ</td>
-                            <td class="text-danger">{{ user_item.total_expense|default:0|floatformat:0 }} đ</td>
+                            <td>{{ user_item.transaction_count|default:0|intcomma }}</td>
+                            <td class="text-success">{{ user_item.total_income|default:0|floatformat:0|intcomma }} đ</td>
+                            <td class="text-danger">{{ user_item.total_expense|default:0|floatformat:0|intcomma }} đ</td>
                             <td>{{ user_item.created_at|date:"d/m/Y" }}</td>
                             <td>
                                 <a href="{% url 'admin_user_detail' user_item.id %}" class="btn btn-sm btn-primary">

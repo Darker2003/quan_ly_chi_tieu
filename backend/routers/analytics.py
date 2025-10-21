@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Category, Transaction, User
 from ..schemas import (AnalyticsResponse, CategoryBreakdown, FinancialSummary,
-                       MonthlyComparison, TransactionType, TrendData)
+                       MonthlyComparison, RecentTransactionResponse, TransactionType, TrendData)
 from ..security import get_current_user
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -352,9 +352,33 @@ async def get_dashboard_data(
     # Get trend data (use actual date range for display)
     trend_data = await get_trend_data(display_start, display_end, None, current_user, db)
 
+    # Get recent transactions (last 10)
+    recent_txns = (
+        db.query(Transaction)
+        .join(Category)
+        .filter(*base_filters)
+        .order_by(Transaction.date.desc(), Transaction.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    
+    recent_transactions = []
+    for txn in recent_txns:
+        recent_transactions.append(
+            RecentTransactionResponse(
+                id=txn.id,
+                amount=txn.amount,
+                description=txn.description,
+                date=txn.date,
+                type=TransactionType(txn.type),
+                category_name=txn.category.name
+            )
+        )
+
     return AnalyticsResponse(
         summary=summary,
         category_breakdown=category_breakdown,
         monthly_comparison=monthly_comparison,
         trend_data=trend_data,
+        recent_transactions=recent_transactions,
     )

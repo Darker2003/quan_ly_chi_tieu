@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     app_name: str = "MoneyFlow API"
     debug: bool = True
     environment: str = "development"
+    
+    django_host: str = "127.0.0.1"
+    django_port: int = 8000
 
     # Security
     secret_key: str = "your-secret-key-change-in-production"
@@ -21,7 +24,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     # Database
-    database_url: str = "sqlite:///./moneyflow.db"
+    database_url: str = "sqlite:///./data/moneyflow.db"
 
     # Server
     fastapi_host: str = "127.0.0.1"

@@ -20,10 +20,18 @@ from backend.security import get_password_hash
 
 # Date range for transactions
 START_DATE = datetime(2024, 5, 1)
-END_DATE = datetime(2025, 5, 31)
+END_DATE = datetime(2025, 10, 20)
 
-def create_default_categories(db, user_id):
-    """Create default categories for a user"""
+def create_default_categories(db):
+    """Create default categories (only once for the system)"""
+    # Check if default categories already exist
+    existing_defaults = db.query(Category).filter(Category.is_default == True).first()
+    if existing_defaults:
+        print("Default categories already exist, skipping creation...")
+        # Return existing categories
+        categories = db.query(Category).filter(Category.is_default == True).all()
+        return {cat.name: cat.id for cat in categories}
+    
     default_categories = [
         # Expense categories
         {"name": "Ăn uống", "type": "expense", "is_default": True},
@@ -50,12 +58,13 @@ def create_default_categories(db, user_id):
             name=cat_data["name"],
             type=cat_data["type"],
             is_default=cat_data["is_default"],
-            user_id=user_id
+            user_id=None  # Default categories don't belong to specific users
         )
         db.add(category)
         db.flush()  # Get the ID
         category_map[cat_data["name"]] = category.id
     
+    print("✓ Created default categories")
     return category_map
 
 def populate_database():
@@ -73,6 +82,9 @@ def populate_database():
         print(f"Date Range: {START_DATE.strftime('%Y-%m-%d')} to {END_DATE.strftime('%Y-%m-%d')}")
         print(f"Generating 50 Vietnamese users with realistic financial data...")
         print()
+        
+        # Create default categories once
+        category_map = create_default_categories(db)
         
         # Generate user profiles
         user_profiles = generate_all_users(50)
@@ -97,9 +109,6 @@ def populate_database():
             )
             db.add(db_user)
             db.flush()  # Get user ID
-            
-            # Create default categories
-            category_map = create_default_categories(db, db_user.id)
             
             # Generate transactions
             transactions = generate_user_transactions(
