@@ -485,3 +485,12 @@ def admin_delete_user(request, user_id):
             messages.error(request, f'Lỗi kết nối: {str(e)}')
 
     return redirect('admin_dashboard')
+
+
+def chatbot_view(request):
+    """AI Financial Chatbot page"""
+    if not request.session.get('access_token'):
+        messages.error(request, 'Vui lòng đăng nhập để sử dụng chatbot')
+        return redirect('login')
+
+    return render(request, 'web/chatbot.html')

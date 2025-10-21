@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .database import get_db, init_db
-from .routers import admin, analytics, auth, categories, transactions, users
+from .routers import admin, analytics, auth, categories, transactions, users, chatbot
 
 # Create FastAPI application
 app = FastAPI(
@@ -37,6 +37,7 @@ app.include_router(transactions.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(chatbot.router, prefix="/api")
 
 
 @app.on_event("startup")

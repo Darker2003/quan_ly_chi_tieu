@@ -4,6 +4,7 @@ Configuration settings for MoneyFlow FastAPI backend
 
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
@@ -39,10 +40,19 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     email_from: str = "noreply@moneyflow.com"
+    
+    # AI Chatbot
+    gemini_api_key: str = ""
 
     class Config:
         env_file = ".env"
         case_sensitive = False
+    
+    def __init__(self, **kwargs):
+        # Handle DEBUG environment variable conflict
+        if os.getenv('DEBUG') == 'WARN':
+            os.environ.pop('DEBUG', None)
+        super().__init__(**kwargs)
 
 
 settings = Settings()

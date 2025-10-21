@@ -17,5 +17,6 @@ urlpatterns = [
     path('admin/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/users/<int:user_id>/', views.admin_user_detail, name='admin_user_detail'),
     path('admin/users/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
+    path('chatbot/', views.chatbot_view, name='chatbot'),
 ]
 
