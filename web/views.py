@@ -64,7 +64,7 @@ def register_view(request):
                 }
             )
 
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:  # Accept both 200 and 201
                 data = response.json()
                 request.session['access_token'] = data['access_token']
                 request.session['user'] = data['user']
