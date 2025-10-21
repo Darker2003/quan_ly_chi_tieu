@@ -53,17 +53,34 @@
    pip install -r requirements.txt
    ```
 
-3. **Initialize Database**
+3. **Create Environment File**
+   ```bash
+   # Copy .env.example to .env
+   copy .env.example .env  # Windows
+   cp .env.example .env    # Linux/Mac
+   ```
+
+4. **Initialize Database**
    ```bash
    python -c "from backend.database import init_db; init_db()"
    ```
 
-4. **Start Both Servers**
+5. **Populate Vietnamese Data**
+   ```bash
+   python data/populate_vietnamese_data.py
+   ```
+
+6. **Run Django Migrations**
+   ```bash
+   python manage.py migrate
+   ```
+
+7. **Start Both Servers**
    ```bash
    python run_both_servers.py
    ```
 
-5. **Access the Application**
+8. **Access the Application**
    - Frontend: http://127.0.0.1:8000
    - Backend API: http://127.0.0.1:8001
    - API Documentation: http://127.0.0.1:8001/api/docs
